@@ -45,6 +45,7 @@ public class TransactionProducer {
 
         producer.setExecutorService(executorService);
         producer.setTransactionListener(transactionListener);
+        producer.setNamesrvAddr("localhost:9876");
         producer.start();
 
         String[] tags = new String[] {"TagA", "TagB", "TagC", "TagD", "TagE"};

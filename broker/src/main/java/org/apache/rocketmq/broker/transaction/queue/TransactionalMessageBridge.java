@@ -191,9 +191,13 @@ public class TransactionalMessageBridge {
     }
 
     private MessageExtBrokerInner parseHalfMessageInner(MessageExtBrokerInner msgInner) {
+        //先将真实topic和queueId退避到消息的properties中，然后设置topic为RMQ_SYS_TRANS_HALF_TOPIC，queueId为0。
+        //达到2个目的：1.消息存储无差别 2.对原topic的消费者不可见。
         MessageAccessor.putProperty(msgInner, MessageConst.PROPERTY_REAL_TOPIC, msgInner.getTopic());
         MessageAccessor.putProperty(msgInner, MessageConst.PROPERTY_REAL_QUEUE_ID,
             String.valueOf(msgInner.getQueueId()));
+        //将消息的sysFlag重置为0。这个操作也非常重要。因为CommitLogDispatcherBuildConsumeQueue在更新ConsumerQueue时会跳过TRANSACTION_PREPARED_TYPE和
+        //TRANSACTION_ROLLBACK_TYPE的消息，这里重置为0后，就不会影响对RMQ_SYS_TRANS_HALF_TOPIC的ConsumerQueue的更新。
         msgInner.setSysFlag(
             MessageSysFlag.resetTransactionValue(msgInner.getSysFlag(), MessageSysFlag.TRANSACTION_NOT_TYPE));
         msgInner.setTopic(TransactionalMessageUtil.buildHalfTopic());
