@@ -207,6 +207,7 @@ public class TransactionalMessageBridge {
     }
 
     public boolean putOpMessage(MessageExt messageExt, String opType) {
+        //构建half消息的MessageQueue。用于后面构建op消息的MessageQueue。
         MessageQueue messageQueue = new MessageQueue(messageExt.getTopic(),
             this.brokerController.getBrokerConfig().getBrokerName(), messageExt.getQueueId());
         if (TransactionalMessageUtil.REMOVETAG.equals(opType)) {
@@ -302,12 +303,14 @@ public class TransactionalMessageBridge {
      * @return This method will always return true.
      */
     private boolean addRemoveTagInTransactionOp(MessageExt messageExt, MessageQueue messageQueue) {
+        //构建op消息。topic为RMQ_SYS_TRANS_OP_HALF_TOPIC，消息体为half消息的queueOffset。
         Message message = new Message(TransactionalMessageUtil.buildOpTopic(), TransactionalMessageUtil.REMOVETAG,
             String.valueOf(messageExt.getQueueOffset()).getBytes(TransactionalMessageUtil.charset));
         writeOp(message, messageQueue);
         return true;
     }
 
+    //根据half消息的MessageQueue构建op消息的MessageQueue，并维护它们的对应关系到Map中。
     private void writeOp(Message message, MessageQueue mq) {
         MessageQueue opQueue;
         if (opQueueMap.containsKey(mq)) {
@@ -322,6 +325,7 @@ public class TransactionalMessageBridge {
         if (opQueue == null) {
             opQueue = new MessageQueue(TransactionalMessageUtil.buildOpTopic(), mq.getBrokerName(), mq.getQueueId());
         }
+        //调用MessageStore接口，实现op消息落盘。
         putMessage(makeOpMessageInner(message, opQueue));
     }
 

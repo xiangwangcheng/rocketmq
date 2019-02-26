@@ -160,7 +160,7 @@ public class BrokerConfig {
      * that can be checked.
      */
     @ImportantField
-    private long transactionTimeOut = 6 * 1000;
+    private long transactionTimeOut = 600 * 1000;
 
     /**
      * The maximum number of times the message was checked, if exceed this value, this message will be discarded.
@@ -172,7 +172,7 @@ public class BrokerConfig {
      * Transaction message check interval.
      */
     @ImportantField
-    private long transactionCheckInterval = 60 * 1000;
+    private long transactionCheckInterval = 600 * 1000;
 
     /**
      * Acl feature switch

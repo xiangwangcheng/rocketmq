@@ -62,6 +62,9 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
             return response;
         }
 
+        //1. Producer执行完本地事务后立即发来END_TRANSACTION请求
+        //2. broker发送回查后，Producer检查本地事务状态后，发来END_TRANSACTION请求
+        //这里二者逻辑的区别也仅仅是日志记录不同。
         if (requestHeader.getFromTransactionCheck()) {
             switch (requestHeader.getCommitOrRollback()) {
                 case MessageSysFlag.TRANSACTION_NOT_TYPE: {
@@ -123,19 +126,26 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
         }
         OperationResult result = new OperationResult();
         if (MessageSysFlag.TRANSACTION_COMMIT_TYPE == requestHeader.getCommitOrRollback()) {
+            //commitMessage提交消息。真实的逻辑是根据传过来的commitLogOffset从CommitLog获取half消息
             result = this.brokerController.getTransactionalMessageService().commitMessage(requestHeader);
             if (result.getResponseCode() == ResponseCode.SUCCESS) {
+                //检查合法性：1.half消息的PGROUP、queueOffset、commitLogOffset和请求头的相应值相同。
                 RemotingCommand res = checkPrepareMessage(result.getPrepareMessage(), requestHeader);
                 if (res.getCode() == ResponseCode.SUCCESS) {
-                    //还原prepare message真实的topic、queueId
+                    //还原half message真实的topic、queueId
                     MessageExtBrokerInner msgInner = endMessageTransaction(result.getPrepareMessage());
                     //sysFlag设置为TRANSACTION_COMMIT_TYPE
                     msgInner.setSysFlag(MessageSysFlag.resetTransactionValue(msgInner.getSysFlag(), requestHeader.getCommitOrRollback()));
                     msgInner.setQueueOffset(requestHeader.getTranStateTableOffset());
                     msgInner.setPreparedTransactionOffset(requestHeader.getCommitLogOffset());
                     msgInner.setStoreTimestamp(result.getPrepareMessage().getStoreTimestamp());
+                    //将还原后的消息重新落盘，随后就会调用CommitLogDispatcherBuildConsumeQueue.dispatch更新原始topic的ConsumerQueue，
+                    //该消息对消费者可见。
                     RemotingCommand sendResult = sendFinalMessage(msgInner);
                     if (sendResult.getCode() == ResponseCode.SUCCESS) {
+                        //删除half消息(并非从磁盘真正删除)。
+                        //具体逻辑是构建一个消息放入RMQ_SYS_TRANS_OP_HALF_TOPIC队列，queueId为对应half消息queueId，
+                        //消息内容为对应half消息的queueOffset，并将TAGS属性设置"d"。
                         this.brokerController.getTransactionalMessageService().deletePrepareMessage(result.getPrepareMessage());
                     }
                     return sendResult;
@@ -143,10 +153,12 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
                 return res;
             }
         } else if (MessageSysFlag.TRANSACTION_ROLLBACK_TYPE == requestHeader.getCommitOrRollback()) {
+            //rollbackMessage.真实逻辑和commitMessage一样，根据传过来的commitLogOffset从CommitLog获取half消息
             result = this.brokerController.getTransactionalMessageService().rollbackMessage(requestHeader);
             if (result.getResponseCode() == ResponseCode.SUCCESS) {
                 RemotingCommand res = checkPrepareMessage(result.getPrepareMessage(), requestHeader);
                 if (res.getCode() == ResponseCode.SUCCESS) {
+                    //删除half消息。具体逻辑是将消息放入RMQ_SYS_TRANS_OP_HALF_TOPIC队列，消息内容为对应half消息的queueOffset，并将TAGS属性设置"d"。
                     this.brokerController.getTransactionalMessageService().deletePrepareMessage(result.getPrepareMessage());
                 }
                 return res;

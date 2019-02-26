@@ -1250,6 +1250,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         final String brokerAddr = this.mQClientFactory.findBrokerAddressInPublish(sendResult.getMessageQueue().getBrokerName());
         EndTransactionRequestHeader requestHeader = new EndTransactionRequestHeader();
         requestHeader.setTransactionId(transactionId);
+        //half消息在CommitLog中的物理偏移量
         requestHeader.setCommitLogOffset(id.getOffset());
         switch (localTransactionState) {
             case COMMIT_MESSAGE:
@@ -1266,7 +1267,9 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         }
 
         requestHeader.setProducerGroup(this.defaultMQProducer.getProducerGroup());
+        //half消息在其ConsumerQueue中的偏移量
         requestHeader.setTranStateTableOffset(sendResult.getQueueOffset());
+        //这里的msgId为Producer发送half消息时生成的UNIQ_KEY
         requestHeader.setMsgId(sendResult.getMsgId());
         String remark = localException != null ? ("executeLocalTransactionBranch exception: " + localException.toString()) : null;
         this.mQClientFactory.getMQClientAPIImpl().endTransactionOneway(brokerAddr, requestHeader, remark,

@@ -473,6 +473,7 @@ public class BrokerController {
         return result;
     }
 
+    //采用SPI方式加载事务消息的具体实现。目前没有真正用起来，还是使用默认的实现。
     private void initialTransaction() {
         this.transactionalMessageService = ServiceProvider.loadClass(ServiceProvider.TRANSACTION_SERVICE_ID, TransactionalMessageService.class);
         if (null == this.transactionalMessageService) {
