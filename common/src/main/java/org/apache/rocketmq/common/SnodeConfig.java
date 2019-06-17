@@ -107,7 +107,7 @@ public class SnodeConfig {
     private boolean aclEnable = false;
 
     @ImportantField
-    private boolean embeddedModeEnable = true;
+    private boolean embeddedModeEnable = false;
 
     public void setSnodeHeartBeatInterval(long snodeHeartBeatInterval) {
         this.snodeHeartBeatInterval = snodeHeartBeatInterval;

@@ -25,6 +25,7 @@ import org.apache.rocketmq.common.SnodeConfig;
 import org.apache.rocketmq.common.client.ClientRole;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.protocol.route.BrokerData;
+import org.apache.rocketmq.mqtt.client.IOTClientManagerImpl;
 import org.apache.rocketmq.mqtt.client.InFlightMessage;
 import org.apache.rocketmq.mqtt.client.MQTTSession;
 import org.apache.rocketmq.mqtt.processor.DefaultMqttMessageProcessor;
@@ -84,15 +85,16 @@ public class MQTTSessionTest {
             assertEquals(i + 1, mqttHeader.getPacketId().intValue());
             System.out.println(mqttHeader.getPacketId());
         }
+        IOTClientManagerImpl iotClientManager = (IOTClientManagerImpl)defaultMqttMessageProcessor.getIotClientManager();
         assertEquals(0, mqttSession.getInflightSlots().get());
         assertEquals(10, mqttSession.getInflightWindow().size());
-        assertEquals(10, mqttSession.getInflightTimeouts().size());
+        assertEquals(10, iotClientManager.getInflightTimeouts().size());
 
         mqttSession.pushMessageQos1(mqttHeader, messageExt, brokerData);
 
         assertEquals(0, mqttSession.getInflightSlots().get());
         assertEquals(10, mqttSession.getInflightWindow().size());
-        assertEquals(10, mqttSession.getInflightTimeouts().size());
+        assertEquals(10, iotClientManager.getInflightTimeouts().size());
     }
 
     @Test

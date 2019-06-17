@@ -28,6 +28,7 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import org.apache.rocketmq.common.MqttConfig;
 import org.apache.rocketmq.common.SnodeConfig;
 import org.apache.rocketmq.common.client.ClientRole;
+import org.apache.rocketmq.common.protocol.route.BrokerData;
 import org.apache.rocketmq.mqtt.client.IOTClientManagerImpl;
 import org.apache.rocketmq.mqtt.client.InFlightMessage;
 import org.apache.rocketmq.mqtt.client.MQTTSession;
@@ -84,7 +85,7 @@ public class MqttPubackMessageHandlerTest {
 
         MQTTSession mqttSession = Mockito.spy(new MQTTSession("client1", ClientRole.IOTCLIENT, null, true, true, remotingChannel, System.currentTimeMillis(), defaultMqttMessageProcessor));
         Mockito.when(iotClientManager.getClient(anyString(), any(RemotingChannel.class))).thenReturn(mqttSession);
-        InFlightMessage inFlightMessage = Mockito.spy(new InFlightMessage("topicTest", 0, "Hello".getBytes(), null, 0));
+        InFlightMessage inFlightMessage = Mockito.spy(new InFlightMessage("topicTest", 0, "Hello".getBytes(), (BrokerData) null, 0L));
         doReturn(inFlightMessage).when(mqttSession).pubAckReceived(anyInt());
         RemotingCommand remotingCommand = mqttPubackMessageHandler.handleMessage(mqttMessage, remotingChannel);
         assert remotingCommand == null;

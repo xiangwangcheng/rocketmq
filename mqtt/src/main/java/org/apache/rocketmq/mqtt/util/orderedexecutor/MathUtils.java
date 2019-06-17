@@ -37,10 +37,9 @@ public class MathUtils {
     }
 
     /**
-     * Current time from some arbitrary time base in the past, counting in
-     * nanoseconds, and not affected by settimeofday or similar system clock
-     * changes. This is appropriate to use when computing how much longer to
-     * wait for an interval to expire.
+     * Current time from some arbitrary time base in the past, counting in nanoseconds, and not affected by settimeofday
+     * or similar system clock changes. This is appropriate to use when computing how much longer to wait for an
+     * interval to expire.
      *
      * <p>NOTE: only use it for measuring.
      * http://docs.oracle.com/javase/1.5.0/docs/api/java/lang/System.html#nanoTime%28%29
@@ -52,8 +51,8 @@ public class MathUtils {
     }
 
     /**
-     * Microseconds elapsed since the time specified, the input is nanoTime
-     * the only conversion happens when computing the elapsed time.
+     * Microseconds elapsed since the time specified, the input is nanoTime the only conversion happens when computing
+     * the elapsed time.
      *
      * @param startNanoTime the start of the interval that we are measuring
      * @return elapsed time in milliseconds.
@@ -63,13 +62,13 @@ public class MathUtils {
     }
 
     /**
-     * Nanoseconds elapsed since the time specified, the input is nanoTime
-     * the only conversion happens when computing the elapsed time.
+     * Nanoseconds elapsed since the time specified, the input is nanoTime the only conversion happens when computing
+     * the elapsed time.
      *
      * @param startNanoTime the start of the interval that we are measuring
      * @return elapsed time in milliseconds.
      */
     public static long elapsedNanos(long startNanoTime) {
-       return System.nanoTime() - startNanoTime;
+        return System.nanoTime() - startNanoTime;
     }
 }

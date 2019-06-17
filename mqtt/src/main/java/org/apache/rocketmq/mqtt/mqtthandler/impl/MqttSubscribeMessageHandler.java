@@ -106,7 +106,8 @@ public class MqttSubscribeMessageHandler implements MessageHandler {
         mqttHeader.setMessageId(mqttSubscribeMessage.variableHeader().messageId());
 
         List<Integer> grantQoss = doSubscribe(client, payload.topicSubscriptions(), iotClientManager);
-        //Publish retained messages to subscribers.
+        //TODO Publish retained messages to subscribers.
+
         MqttSubAckPayload mqttSubAckPayload = new MqttSubAckPayload(grantQoss);
         command.setBody(MqttEncodeDecodeUtil.encode(mqttSubAckPayload));
         mqttHeader.setRemainingLength(0x02 + mqttSubAckPayload.grantedQoSLevels().size());

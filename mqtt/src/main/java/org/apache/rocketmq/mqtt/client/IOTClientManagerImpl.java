@@ -96,7 +96,7 @@ public class IOTClientManagerImpl extends ClientManagerImpl {
                 Client client = iterator1.next();
                 if (client.getClientId().equals(clientId)) {
                     iterator1.remove();
-                    Set<Client> clients = toBeRemoveFromPersistentStore.getOrDefault((next.getKey()), new HashSet<>());
+                    Set<Client> clients = toBeRemoveFromPersistentStore.getOrDefault(next.getKey(), new HashSet<>());
                     clients.add(client);
                     toBeRemoveFromPersistentStore.put(next.getKey(), clients);
                 }
