@@ -46,7 +46,7 @@ public class MqttDisconnectMessageHandler implements MessageHandler {
     public RemotingCommand handleMessage(MqttMessage message, RemotingChannel remotingChannel) {
         // TODO discard the Will Message and Will Topic
         MqttFixedHeader fixedHeader = message.fixedHeader();
-        if (fixedHeader.qosLevel() != MqttQoS.AT_MOST_ONCE || !fixedHeader.isDup() || !fixedHeader
+        if (fixedHeader.qosLevel() != MqttQoS.AT_MOST_ONCE || fixedHeader.isDup() || fixedHeader
             .isRetain()) {
             log.error(
                 "The reserved bits(qos/isDup/isRetain) are not zero. Qos={}, isDup={}, isRetain={}",

@@ -20,12 +20,17 @@ import io.netty.handler.codec.mqtt.MqttFixedHeader;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttMessageType;
 import io.netty.handler.codec.mqtt.MqttQoS;
-import org.apache.rocketmq.common.client.Client;
+import java.util.HashSet;
+import org.apache.rocketmq.common.MqttConfig;
+import org.apache.rocketmq.common.SnodeConfig;
+import org.apache.rocketmq.common.client.ClientRole;
 import org.apache.rocketmq.common.message.mqtt.WillMessage;
 import org.apache.rocketmq.mqtt.client.IOTClientManagerImpl;
+import org.apache.rocketmq.mqtt.client.MQTTSession;
 import org.apache.rocketmq.mqtt.mqtthandler.impl.MqttDisconnectMessageHandler;
 import org.apache.rocketmq.mqtt.processor.DefaultMqttMessageProcessor;
 import org.apache.rocketmq.remoting.RemotingChannel;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -40,18 +45,44 @@ public class MqttDisconnectMessageHandlerTest {
     @Mock
     private DefaultMqttMessageProcessor defaultMqttMessageProcessor;
 
+    @Before
+    public void before() {
+        this.defaultMqttMessageProcessor = new DefaultMqttMessageProcessor(new MqttConfig(), new SnodeConfig(), null, null, null);
+    }
+
     @Test
-    public void testHandlerMessage() throws Exception {
+    public void testHandlerMessage() {
 
         MqttDisconnectMessageHandler mqttDisconnectMessageHandler = new MqttDisconnectMessageHandler(
             defaultMqttMessageProcessor);
-        Client client = new Client();
-        client.setRemotingChannel(remotingChannel);
-        client.setClientId("123456");
+        MQTTSession client = new MQTTSession("123456", ClientRole.IOTCLIENT, new HashSet<String>() {
+            {
+                add("IOT_GROUP");
+            }
+        }, true, true, remotingChannel, System.currentTimeMillis(), defaultMqttMessageProcessor);
         defaultMqttMessageProcessor.getIotClientManager().register(IOTClientManagerImpl.IOT_GROUP, client);
         defaultMqttMessageProcessor.getWillMessageService().saveWillMessage("123456", new WillMessage());
         MqttMessage mqttDisconnectMessage = new MqttMessage(new MqttFixedHeader(
             MqttMessageType.DISCONNECT, false, MqttQoS.AT_MOST_ONCE, false, 200));
+
+        mqttDisconnectMessageHandler.handleMessage(mqttDisconnectMessage, remotingChannel);
+    }
+
+    @Test
+    public void testHandlerMessage_fixHeaderIllegal() {
+
+        this.defaultMqttMessageProcessor = new DefaultMqttMessageProcessor(new MqttConfig(), new SnodeConfig(), null, null, null);
+        MqttDisconnectMessageHandler mqttDisconnectMessageHandler = new MqttDisconnectMessageHandler(
+            defaultMqttMessageProcessor);
+        MQTTSession client = new MQTTSession("123456", ClientRole.IOTCLIENT, new HashSet<String>() {
+            {
+                add("IOT_GROUP");
+            }
+        }, true, true, remotingChannel, System.currentTimeMillis(), defaultMqttMessageProcessor);
+        defaultMqttMessageProcessor.getIotClientManager().register(IOTClientManagerImpl.IOT_GROUP, client);
+        defaultMqttMessageProcessor.getWillMessageService().saveWillMessage("123456", new WillMessage());
+        MqttMessage mqttDisconnectMessage = new MqttMessage(new MqttFixedHeader(
+            MqttMessageType.DISCONNECT, false, MqttQoS.AT_LEAST_ONCE, false, 200));
 
         mqttDisconnectMessageHandler.handleMessage(mqttDisconnectMessage, remotingChannel);
     }
